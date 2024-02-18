@@ -1,40 +1,62 @@
-import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { deleteContact } from '../../redux/contactsSlice';
-import { selectContacts } from '../../redux/selectors';
-import { selectFilter } from '../../redux/selectors';
+import {
+  apiDeleteContact,
+  apiGetContacts,
+} from '../../redux/contacts/contactsSlice';
 import css from './ContactList.module.css';
+import { useEffect } from 'react';
+import { STATUSES } from 'utils/constants';
+import {
+  selectError,
+  selectStatus,
+} from '../../redux/contacts/contactSlice.selectors';
+import { selectContactsFilter } from '../../redux/filter/filtlerSlice.selectors';
+import Loader from 'components/Loader/Loader';
 
 export const ContactList = () => {
   const dispatch = useDispatch();
-  const contacts = useSelector(selectContacts);
-  const filter = useSelector(selectFilter);
+  const status = useSelector(selectStatus);
+  const error = useSelector(selectError);
+  const filteredContacts = useSelector(selectContactsFilter);
 
-  const filteredContacts = contacts.filter(
-    contact =>
-      contact &&
-      contact.name &&
-      contact.name.toLowerCase().includes(filter.toLowerCase())
-  );
+  useEffect(() => {
+    dispatch(apiGetContacts());
+  }, [dispatch]);
 
-  const handleDeleteContact = contactId => {
-    dispatch(deleteContact(contactId));
+  const onDeleteContact = id => {
+    const isConfirmed = window.confirm(
+      'Are you sure want to delete this contact?'
+    );
+    if (isConfirmed) {
+      dispatch(apiDeleteContact(id));
+    }
   };
 
   return (
-    <ul>
-      {filteredContacts.map(contact => (
-        <li key={contact.id}>
-          {contact.name}: {contact.number}
-          <button
-            className={css.contactlist_btn}
-            type="button"
-            onClick={() => handleDeleteContact(contact.id)}
-          >
-            Delete
-          </button>
-        </li>
-      ))}
-    </ul>
+    <>
+      {status === STATUSES.pending && (
+        <div>
+          <Loader />
+        </div>
+      )}
+      {status === STATUSES.error && <div>{error}</div>}
+      <ul className={css.contactList}>
+        {filteredContacts?.map(contact => {
+          return (
+            <li key={contact.id} className={css.contactItem}>
+              <p className={css.contactText}>
+                {contact.name}: {contact.phone}
+              </p>
+              <button
+                className={css.deleteBtn}
+                onClick={() => onDeleteContact(contact.id)}
+              >
+                Delete
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+    </>
   );
 };

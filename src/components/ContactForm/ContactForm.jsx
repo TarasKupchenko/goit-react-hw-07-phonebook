@@ -1,47 +1,69 @@
-import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { nanoid } from 'nanoid';
-import { addContact } from '../../redux/contactsSlice';
-import { selectContacts } from '../../redux/selectors';
+import { nanoid } from '@reduxjs/toolkit';
+import { useRef } from 'react';
+import { apiAddContact } from '../../redux/contacts/contactsSlice';
+
 import css from './ContactForm.module.css';
+import { selectContactsList } from '../../redux/contacts/contactSlice.selectors';
 
 export const ContactForm = () => {
   const dispatch = useDispatch();
-  const contacts = useSelector(selectContacts);
+  const contacts = useSelector(selectContactsList);
 
-  const handleSubmit = e => {
+  const nameRef = useRef(null);
+  const phoneRef = useRef(null);
+
+  const onSubmit = e => {
     e.preventDefault();
-    const formData = new FormData(e.target);
-    const name = formData.get('name');
-    const number = formData.get('number');
 
-    if (name.trim() === '' || number.trim() === '') {
-      alert('Please enter name and number.');
+    const name = nameRef.current.value;
+    const phone = phoneRef.current.value;
+
+    const alreadyInContacts = contacts.some(
+      contact => contact.name.toLowerCase() === name.trim().toLowerCase()
+    );
+    if (alreadyInContacts) {
+      alert(`Contact ${name} is already in List.`);
       return;
     }
 
-    const isNameExists = contacts.some(contact => contact.name === name);
+    const newContact = { id: nanoid(), name, phone };
+    dispatch(apiAddContact(newContact));
 
-    if (isNameExists) {
-      alert(`Contact with name ${name} already exists!`);
-      return;
-    }
-
-    dispatch(addContact({ id: nanoid(), name, number }));
-    e.target.reset();
+    e.currentTarget.reset();
   };
 
   return (
-    <form className={css.contact_form} onSubmit={handleSubmit}>
-      <label>
-        Name:
-        <input className={css.form_name} type="text" name="name" required />
+    <form className={css.form} onSubmit={onSubmit}>
+      <label className={css.label} htmlFor="nameInput">
+        Name
       </label>
-      <label>
-        Number:
-        <input type="tel" name="number" required />
+      <input
+        className={css.input}
+        ref={nameRef}
+        type="text"
+        id="nameInput"
+        name="name"
+        required
+        placeholder="Bob"
+      />
+
+      <label className={css.label} htmlFor="telInput">
+        Number
       </label>
-      <button type="submit">Add contact</button>
+      <input
+        className={css.input}
+        ref={phoneRef}
+        type="tel"
+        id="telInput"
+        name="number"
+        required
+        placeholder="1234567"
+      />
+
+      <button className={css.submitBtn} type="submit">
+        Add Contact
+      </button>
     </form>
   );
 };
