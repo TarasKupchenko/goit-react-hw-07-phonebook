@@ -2,13 +2,15 @@ import React, { useState } from 'react';
 import css from './Phonebook.module.css';
 import { useDispatch, useSelector } from 'react-redux';
 import { addContact } from '../../redux/contacts/operations';
+import { selectContacts } from '../../redux/contacts/contactSlice.selectors';
+import { selectFilter } from '../../redux/contacts/contactSlice.selectors';
 
 export const PhoneBook = () => {
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
 
-  const contacts = useSelector(state => state.contacts.contacts.items);
-  const filter = useSelector(state => state.filter.filter);
+  const filter = useSelector(selectFilter);
+  const contacts = useSelector(selectContacts);
   const dispatch = useDispatch();
 
   const handleAddContact = event => {
